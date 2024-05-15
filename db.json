@@ -1,0 +1,64 @@
+{
+  "products": [
+    {
+      "id": "1",
+      "name": "Tênis Nike Revolution 7 - Masculino",
+      "imageUrl": "https://picsum.photos/200/300",
+      "price": 269.99
+    },
+    {
+      "id": "2",
+      "name": "Camiseta Adidas Originals - Feminina",
+      "imageUrl": "https://picsum.photos/200/300",
+      "price": 89.99
+    },
+    {
+      "id": "3",
+      "name": "Shorts Nike Dry-Fit - Masculino",
+      "imageUrl": "https://picsum.photos/200/300",
+      "price": 129.99
+    },
+    {
+      "id": "4",
+      "name": "Shorts Nike Dry-Fit - Masculino",
+      "imageUrl": "https://picsum.photos/200/300",
+      "price": 129.99
+    },
+    {
+      "id": "5",
+      "name": "Shorts Nike Dry-Fit - Masculino",
+      "imageUrl": "https://picsum.photos/200/300",
+      "price": 129.99
+    },
+    {
+      "id": "6",
+      "name": "Shorts Nike Dry-Fit - Masculino",
+      "imageUrl": "https://picsum.photos/200/300",
+      "price": 129.99
+    },
+    {
+      "id": "7",
+      "name": "Shorts Nike Dry-Fit - Masculino",
+      "imageUrl": "https://picsum.photos/200/300",
+      "price": 129.99
+    },
+    {
+      "id": "8",
+      "name": "Shorts Nike Dry-Fit - Masculino",
+      "imageUrl": "https://picsum.photos/200/300",
+      "price": 129.99
+    },
+    {
+      "id": "a540",
+      "name": "jose da silva",
+      "price": 269.99,
+      "image": ""
+    },
+    {
+      "id": "c3f7",
+      "name": "Tênis Nike Revolution 7 - Mascul",
+      "price": 269.99,
+      "image": ""
+    }
+  ]
+}
