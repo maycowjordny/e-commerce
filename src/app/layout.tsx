@@ -1,3 +1,4 @@
+import SnackbarProvider from "@/components/notistack";
 import EcommerceThemeProvider from "@/theme/theme-provider";
 import type { Metadata } from "next";
 
@@ -14,9 +15,11 @@ export default function RootLayout({
   return (
     <html lang="pt-br">
       <body>
-        <EcommerceThemeProvider>
-          {children}
-        </EcommerceThemeProvider>
+        <SnackbarProvider>
+          <EcommerceThemeProvider>
+            {children}
+          </EcommerceThemeProvider>
+        </SnackbarProvider>
       </body>
     </html>
   );

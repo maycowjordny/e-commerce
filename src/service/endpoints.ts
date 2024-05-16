@@ -1,12 +1,15 @@
 export const endpoints = {
     user: {
-        create: "/company/users"
+        create: "/users"
+    },
+    session: {
+        create: "/session"
     },
     product: {
         create: "/products/add",
         list: "/products/",
         listById: "/products/",
-        update: "/products/",
+        update: (id: string) => `/products/${id}`,
         delete: "/products/",
     },
 

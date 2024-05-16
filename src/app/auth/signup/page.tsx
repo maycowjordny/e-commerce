@@ -2,16 +2,20 @@
 import FormProvider from "@/components/form/form-provider";
 import { Input } from "@/components/input";
 import { signUpUserValidationSchema } from "@/schema/signup-user-schema";
+import axiosInstance from "@/service/config-axios";
+import { endpoints } from "@/service/endpoints";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoadingButton } from "@mui/lab";
 import { Box, Link, Typography } from "@mui/material";
+import { useRouter } from "next/navigation";
+import { enqueueSnackbar } from "notistack";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 type SignupData = z.infer<typeof signUpUserValidationSchema>
 
 export default function SignupPage() {
-
+    const router = useRouter()
     const defaultValues = {
         name: "",
         email: "",
@@ -25,8 +29,20 @@ export default function SignupPage() {
 
     const { handleSubmit, formState: { isSubmitting }, reset } = methods
 
-    const onSubmit = handleSubmit((data: SignupData) => {
-        reset()
+    const onSubmit = handleSubmit(async (data: SignupData) => {
+        try {
+            await axiosInstance.post(endpoints.user.create, {
+                name: data.name,
+                email: data.email,
+                password: data.password,
+            })
+
+            router.push("/auth/signin")
+            enqueueSnackbar("Usuário criado com sucesso", { variant: "success" })
+            reset()
+        } catch (err) {
+            enqueueSnackbar("Erro ao criar usuário", { variant: "error" })
+        }
     })
 
 

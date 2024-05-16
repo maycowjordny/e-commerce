@@ -1,13 +1,11 @@
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { Box } from '@mui/material';
-import Button from '@mui/material/Button';
 import { styled } from '@mui/material/styles';
-import { useState } from 'react';
+import { forwardRef, useImperativeHandle } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 
 type Props = {
     name: string;
     label: string;
+    handleDrop: (file: File) => Promise<void>
 };
 
 const VisuallyHiddenInput = styled('input')({
@@ -22,40 +20,35 @@ const VisuallyHiddenInput = styled('input')({
     width: 1,
 });
 
-export default function InputFileUpload({ name, label }: Props) {
+const ImageUpload = forwardRef((prop: Props, ref) => {
     const { control } = useFormContext();
-    const [fileName, setFileName] = useState('');
+    useImperativeHandle(ref, () => {
+        triggerUpload: () => {
+            console.log("aaaaaaaaaa");
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            setFileName(file.name);
         }
-    };
+    })
 
     return (
         <Controller
-            name={name}
+            name={prop.name}
             control={control}
+            defaultValue=""
             render={({ field }) => (
-                <Box display="flex" gap={2} alignItems="center">
-                    <Button
-                        component="label"
-                        role={undefined}
-                        variant="contained"
-                        tabIndex={-1}
-                        startIcon={<CloudUploadIcon />}
-                    >
-                        {label}
-                        <VisuallyHiddenInput
-                            type="file"
-                            {...field}
-                            onChange={handleFileChange}
-                        />
-                    </Button>
-                    <span>{fileName}</span>
-                </Box>
+                <input
+                    {...field}
+                    multiple
+                    type="file"
+                    onChange={(e: any) => {
+                        console.log(e);
+
+                        field.onChange(prop.handleDrop(e.target.files[0]))
+                    }}
+                    value={field.value.filename}
+                />
             )}
         />
     );
-}
+})
+ImageUpload.displayName = "ImageUpload"
+export default ImageUpload

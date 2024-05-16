@@ -2,21 +2,25 @@ import { Product } from '@/interfaces/product';
 import { registerProductSchema } from '@/schema/register-product';
 import axiosInstance from '@/service/config-axios';
 import { endpoints } from '@/service/endpoints';
+import { concatImgUrl } from '@/utils/concat-img';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LoadingButton } from '@mui/lab';
 import { Button, ButtonProps, Dialog, DialogActions, DialogContent, DialogProps, DialogTitle, IconButton, ModalProps } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
+import { enqueueSnackbar } from 'notistack';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import FormProvider from './form/form-provider';
 import { Input } from './input';
 import InputCurrency from './input-currency';
-import InputFileUpload from './input-file';
+import ImageUpload from './input-file';
 
 type RegisterProductValidationSchema = z.infer<typeof registerProductSchema>;
 
 type FormDialogProps = {
-    productId?: number;
+    productId?: string;
     Icon: React.ReactNode;
     onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
     label?: string;
@@ -27,7 +31,9 @@ type FormDialogProps = {
 
 export default function FormDialog({ productId, Icon, onClick, label, open, onClose, product }: FormDialogProps) {
     const [isEditMode, setIsEditMode] = useState(false);
-
+    const ref = useRef()
+    const router = useRouter()
+    const token = Cookies.get('Auth');
     useEffect(() => {
         setIsEditMode(!!productId);
     }, [productId]);
@@ -35,7 +41,7 @@ export default function FormDialog({ productId, Icon, onClick, label, open, onCl
     const defaultValues = {
         name: "",
         price: 0,
-        image: ""
+
     };
 
     const methods = useForm<RegisterProductValidationSchema>({
@@ -47,22 +53,50 @@ export default function FormDialog({ productId, Icon, onClick, label, open, onCl
 
     const onSubmit = handleSubmit(async (data: RegisterProductValidationSchema) => {
         try {
-            await axiosInstance.post(endpoints.product.create, {
-                data: {
+            console.log(data.image);
+
+            if (productId) {
+                await axiosInstance.put(endpoints.product.update(productId), {
+                    name: data.name,
+                    price: data.price,
+                    image: data.image === concatImgUrl(product?.imageUrl) ? undefined : data.image
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                })
+            } else {
+                await axiosInstance.post(endpoints.product.create, {
                     name: data.name,
                     price: data.price,
                     image: data.image
-                }
-            }, {
-                headers: {
-                    /* Authorization:`Bearer ${token}` */
-                }
-            })
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                })
+
+            }
+            router.push("/dashboard/home")
+            enqueueSnackbar("Produto cadastrado com sucesso", { variant: "success" })
             reset();
         } catch (error) {
-            console.error('Error fetching product:', error);
+            enqueueSnackbar("Erro ao cadastrar produto", { variant: "error" })
         }
     });
+
+    const handleDrop = async (file: File | undefined) => {
+        console.log("aaaaaaaaa");
+        console.log(file);
+
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = async () => {
+            setValue("image", reader.result);
+        };
+    }
 
     useEffect(() => {
         if (product) {
@@ -116,7 +150,7 @@ export default function FormDialog({ productId, Icon, onClick, label, open, onCl
                             name="price"
                             label="Preço"
                         />
-                        <InputFileUpload name='image' label='Selecionar arquivo' />
+                        <ImageUpload name='image' label='Selecionar arquivo' ref={ref} handleDrop={handleDrop} />
                     </DialogContent>
                     <DialogActions>
                         <Button

@@ -2,16 +2,21 @@
 import FormProvider from "@/components/form/form-provider";
 import { Input } from "@/components/input";
 import { signinSchema } from "@/schema/signin-user-schema";
+import axiosInstance from "@/service/config-axios";
+import { endpoints } from "@/service/endpoints";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoadingButton } from "@mui/lab";
 import { Box, Link, Typography } from "@mui/material";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { enqueueSnackbar } from "notistack";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 type SigninValidationSchema = z.infer<typeof signinSchema>
 
 export default function SigninPage() {
-
+    const router = useRouter()
     const defaultValues = {
         email: "",
         password: "",
@@ -25,7 +30,19 @@ export default function SigninPage() {
     const { handleSubmit, formState: { isSubmitting }, reset } = methods
 
     const onSubmit = handleSubmit(async (data: SigninValidationSchema) => {
-        reset()
+        try {
+            const response = await axiosInstance.post(endpoints.session.create, {
+                email: data.email,
+                password: data.password,
+            })
+
+            router.push("/auth/dashboard/home")
+            Cookies.set("Auth", response.data.accessToken)
+            enqueueSnackbar("Login realizado com sucesso", { variant: "success" })
+            reset()
+        } catch (err) {
+            enqueueSnackbar("Erro ao fazer login usuário", { variant: "error" })
+        }
     })
 
     return (
