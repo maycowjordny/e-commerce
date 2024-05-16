@@ -1,49 +1,27 @@
 import { Product } from '@/interfaces/product';
+import { concatImgUrl } from '@/utils/concat-img';
 import { LoadingButton } from '@mui/lab';
-import { Box } from '@mui/material';
+import { Box, CardMedia } from '@mui/material';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import { IconDotsVertical } from '@tabler/icons-react';
-import Image, { StaticImageData } from 'next/image';
-import { useState } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 import FormDialog from './form-dialog';
 
 type Props = {
-    name: string;
-    productId: number;
-    imageUrl: StaticImageData;
-    price: number;
+    product: Product
+    setOpen: Dispatch<SetStateAction<boolean>>
+    open: boolean
 }
 
-export default function CardProduct({ name, imageUrl, price, productId }: Props) {
-    const [open, setOpen] = useState(false);
-    const [product, setProduct] = useState<Product | null>(null);
+export default function CardProduct({ product, setOpen, open }: Props) {
 
-    async function fetchProduct() {
-        try {
-            const response = await fetch(`http://localhost:3001/products/${productId}`);
-
-            const data = await response.json();
-
-            setProduct(data);
-        } catch (error) {
-            console.error('Error fetching product:', error);
-        }
-    }
-
-    const handleClickOpen = async () => {
-        await fetchProduct();
-        setOpen(true);
-    };
-
-    const handleClose = () => {
-        setOpen(false);
-    };
 
     return (
         <Card sx={{
             maxWidth: "266px",
+            maxHeight: "349px",
             width: "100%",
             p: "24px 16px",
             display: "flex",
@@ -59,23 +37,28 @@ export default function CardProduct({ name, imageUrl, price, productId }: Props)
                     right: 0,
                 }}>
                 <FormDialog
-                    product={product}
-                    productId={productId}
-                    Icon={<IconDotsVertical />}
-                    onClick={handleClickOpen}
                     open={open}
-                    onClose={handleClose}
+                    productId={product.props.id}
+                    Icon={<IconDotsVertical />}
+                    onClick={() => setOpen(true)}
+                    onClose={() => setOpen(false)}
                 />
             </Box>
-            <Image src={imageUrl} alt={name} width={160} height={160} />
+            <CardMedia
+                component="img"
+                width={150}
+                height={150}
+                image={concatImgUrl(product?.props.image)}
+                alt={concatImgUrl(product?.props.name)}
+            />
             <CardContent>
                 <Box>
                     <Typography fontSize={16} variant='body1'>
-                        {name}
+                        {product.props.name}
                     </Typography>
                 </Box>
                 <Typography variant="body2" fontSize={24} fontWeight={600}>
-                    R${price}
+                    R${product.props.price.toFixed(2)}
                 </Typography>
             </CardContent>
             <LoadingButton

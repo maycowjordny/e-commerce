@@ -1,7 +1,10 @@
 
 export interface Product {
-    id: number;
-    imageUrl: string;
-    name: string;
-    price: number;
+    props: {
+        id: string;
+        image: string;
+        name: string;
+        price: number;
+
+    }
 };

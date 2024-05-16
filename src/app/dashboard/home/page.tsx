@@ -1,7 +1,9 @@
 'use client'
-import ProductCard from "@/components/card";
+import CardProduct from "@/components/card";
 import FormDialog from "@/components/form-dialog";
 import { Product } from "@/interfaces/product";
+import axiosInstance from "@/service/config-axios";
+import { endpoints } from "@/service/endpoints";
 import { Box, Divider, Typography } from "@mui/material";
 import { IconPlus } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
@@ -13,9 +15,8 @@ export default function Home() {
     useEffect(() => {
         async function fetchProduct() {
             try {
-                const response = await fetch(`http://localhost:3001/products`);
-                const data = await response.json();
-                setProducts(data);
+                const response = await axiosInstance.get(endpoints.product.list)
+                setProducts(response.data);
             } catch (error) {
                 console.error('Error fetching product:', error);
             }
@@ -23,36 +24,27 @@ export default function Home() {
         fetchProduct()
     }, []);
 
-    const handleClickOpen = () => {
-        setOpen(true);
-    };
-
-    const handleClose = () => {
-        setOpen(false);
-    };
-
     return (
         <Box display="flex" flexDirection="column" gap={8} alignItems="end">
             <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
                 <Typography fontSize={24} fontWeight={500}>Produtos</Typography>
                 <FormDialog
+                    open={open}
                     label="Cadastrar produto"
                     Icon={<IconPlus />}
-                    onClick={handleClickOpen}
-                    open={open}
-                    onClose={handleClose}
+                    onClick={() => setOpen(true)}
+                    onClose={() => setOpen(false)}
                 />
             </Box>
             <Divider style={{ width: "100%" }} />
             <Box display="flex" flexWrap="wrap" gap="16px" alignItems="center" justifyContent="space-between">
                 {
                     products.map(product => (
-                        <ProductCard
-                            key={product.id}
-                            imageUrl={product.imageUrl}
-                            name={product.name}
-                            price={product.price}
-                            productId={product.id}
+                        <CardProduct
+                            open={open}
+                            key={product.props.id}
+                            product={product}
+                            setOpen={setOpen}
                         />
                     ))
                 }

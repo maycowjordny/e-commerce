@@ -9,7 +9,7 @@ import { Button, ButtonProps, Dialog, DialogActions, DialogContent, DialogProps,
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import FormProvider from './form/form-provider';
@@ -22,49 +22,54 @@ type RegisterProductValidationSchema = z.infer<typeof registerProductSchema>;
 type FormDialogProps = {
     productId?: string;
     Icon: React.ReactNode;
-    onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
     label?: string;
-    open: boolean;
+    open: ModalProps['open'];
     onClose: ModalProps['onClose'];
+    onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
     product?: Product | null
 } & DialogProps
 
-export default function FormDialog({ productId, Icon, onClick, label, open, onClose, product }: FormDialogProps) {
-    const [isEditMode, setIsEditMode] = useState(false);
+export default function FormDialog({ productId, Icon, label, onClose, onClick, open }: FormDialogProps) {
+    const [product, setProduct] = useState<Product>({} as Product);
+
+
+    const formValue = useMemo(() => ({
+        name: product?.props?.name,
+        price: product?.props?.price,
+        image: concatImgUrl(product?.props?.image),
+    }), [product])
+
     const ref = useRef()
     const router = useRouter()
     const token = Cookies.get('Auth');
-    useEffect(() => {
-        setIsEditMode(!!productId);
-    }, [productId]);
 
     const defaultValues = {
         name: "",
         price: 0,
-
+        image: ""
     };
 
     const methods = useForm<RegisterProductValidationSchema>({
         resolver: zodResolver(registerProductSchema),
-        defaultValues
+        defaultValues,
+        values: formValue
     });
 
     const { handleSubmit, formState: { isSubmitting, isDirty }, reset, setValue, } = methods;
 
     const onSubmit = handleSubmit(async (data: RegisterProductValidationSchema) => {
         try {
-            console.log(data.image);
-
             if (productId) {
                 await axiosInstance.put(endpoints.product.update(productId), {
                     name: data.name,
                     price: data.price,
-                    image: data.image === concatImgUrl(product?.imageUrl) ? undefined : data.image
+                    image: data.image === concatImgUrl(product?.props.image) ? undefined : data.image
                 }, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 })
+
             } else {
                 await axiosInstance.post(endpoints.product.create, {
                     name: data.name,
@@ -74,36 +79,47 @@ export default function FormDialog({ productId, Icon, onClick, label, open, onCl
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
-                })
-
+                });
             }
-            router.push("/dashboard/home")
             enqueueSnackbar("Produto cadastrado com sucesso", { variant: "success" })
             reset();
+
         } catch (error) {
             enqueueSnackbar("Erro ao cadastrar produto", { variant: "error" })
         }
     });
 
-    const handleDrop = async (file: File | undefined) => {
-        console.log("aaaaaaaaa");
-        console.log(file);
 
+
+    useEffect(() => {
+        async function fetchProduct() {
+            try {
+                const response = await axiosInstance.get(endpoints.product.getById(productId), {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                setProduct(response.data);
+            } catch (error) {
+                console.error('Error fetching product:', error);
+            }
+        }
+        fetchProduct()
+    }, [token, productId])
+
+    const handleDrop = async (file: File | undefined) => {
         if (!file) return;
 
         const reader = new FileReader();
 
         reader.onload = async () => {
-            setValue("image", reader.result);
+            const base64Image = reader.result as string;
+            setValue("image", base64Image);
         };
+
+        reader.readAsDataURL(file);
     }
 
-    useEffect(() => {
-        if (product) {
-            setValue('name', product.name, { shouldValidate: true });
-            setValue('price', product.price, { shouldValidate: true });
-        }
-    }, [product, setValue]);
 
     return (
         <FormProvider methods={methods} onSubmit={onSubmit}>
@@ -137,7 +153,7 @@ export default function FormDialog({ productId, Icon, onClick, label, open, onCl
                     fullWidth
                 >
                     <DialogTitle variant='h3'>
-                        {isEditMode ? "Editar Produto" : "Cadastrar Produto"}
+                        {productId ? "Editar Produto" : "Cadastrar Produto"}
                     </DialogTitle>
                     <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                         <Input
@@ -166,7 +182,7 @@ export default function FormDialog({ productId, Icon, onClick, label, open, onCl
                             disabled={!isDirty}
                             loading={isSubmitting}
                         >
-                            {isEditMode ? "Salvar Alterações" : "Cadastrar"}
+                            {productId ? "Salvar Alterações" : "Cadastrar"}
                         </LoadingButton>
                     </DialogActions>
                 </Dialog>
