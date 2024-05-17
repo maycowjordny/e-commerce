@@ -7,6 +7,8 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { alpha, styled } from '@mui/material/styles';
 import { IconLogout, IconSearch } from '@tabler/icons-react';
+import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
 import { ReactNode, useContext } from 'react';
 
 const Search = styled('div')(({ theme }) => ({
@@ -52,8 +54,15 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 export default function NavBar({ children }: { children: ReactNode }) {
     const theme = useTheme()
+    const router = useRouter()
     const { setFilter } = useContext(FilterContext)
     const smUp = useMediaQuery(theme.breakpoints.up("md"));
+
+    const logout = () => {
+        Cookies.remove('Auth');
+        router.push("/auth/signin")
+    };
+
     return (
         <>
             <Box sx={{ flexGrow: 1, mb: 10 }}>
@@ -81,7 +90,7 @@ export default function NavBar({ children }: { children: ReactNode }) {
                                     </IconButton>
                             }
                             <IconButton color="inherit">
-                                <IconLogout />
+                                <IconLogout onClick={logout} />
                             </IconButton>
                         </Box>
                     </Toolbar>

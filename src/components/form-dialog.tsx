@@ -21,7 +21,7 @@ type FormDialogProps = {
     Icon: React.ReactNode;
     label?: string;
     open: ModalProps['open'];
-    fetchProducts?: () => Promise<void>
+    fetchProducts: () => Promise<void>
     onClose: ModalProps['onClose'];
     onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
 } & DialogProps
@@ -30,9 +30,9 @@ export default function FormDialog({ productId, Icon, label, onClose, onClick, o
     const [product, setProduct] = useState<Product>({} as Product);
 
     const formValue = useMemo(() => ({
-        name: product?.props?.name || '',
-        price: product?.props?.price || 0,
-        image: product?.props?.image ? concatImgUrl(product.props.image) : '',
+        name: product?.props?.name,
+        price: product?.props?.price,
+        image: concatImgUrl(product?.props?.image),
     }), [product]);
 
     const ref = useRef();
@@ -55,15 +55,16 @@ export default function FormDialog({ productId, Icon, label, onClose, onClick, o
         try {
             if (productId) {
                 await updateProduct(productId, data);
+                enqueueSnackbar("Produto atualizado produto", { variant: "success" });
             } else {
                 await createProduct(data);
+                enqueueSnackbar("Produto cadastrado com sucesso", { variant: "success" });
             }
-            enqueueSnackbar("Produto cadastrado com sucesso", { variant: "success" });
 
-            if (fetchProducts) fetchProducts();
+            fetchProducts();
             reset();
         } catch (error) {
-            enqueueSnackbar("Erro ao cadastrar produto", { variant: "error" });
+            enqueueSnackbar("Erro no produto", { variant: "error" });
         }
     });
 
@@ -81,7 +82,6 @@ export default function FormDialog({ productId, Icon, label, onClose, onClick, o
     }
 
     useEffect(() => {
-
         async function fetchProduct() {
             try {
                 if (!productId) return;

@@ -1,21 +1,37 @@
 import { Product } from '@/interfaces/product';
+import { deleteProduct } from '@/service/product-service';
 import { concatImgUrl } from '@/utils/concat-img';
 import { LoadingButton } from '@mui/lab';
-import { Box, CardMedia } from '@mui/material';
+import { Box, CardMedia, IconButton } from '@mui/material';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
-import { IconDotsVertical } from '@tabler/icons-react';
+import { IconEdit, IconTrash } from '@tabler/icons-react';
+import { enqueueSnackbar } from 'notistack';
 import { Dispatch, SetStateAction, useState } from 'react';
 import FormDialog from './form-dialog';
 
 type Props = {
     product: Product;
     setOpen: Dispatch<SetStateAction<boolean>>;
+    fetchProducts: () => Promise<void>
 };
 
-export default function CardProduct({ product }: Props) {
+export default function CardProduct({ product, fetchProducts }: Props) {
     const [open, setDialogOpen] = useState(false);
+    const isAdmin = window.localStorage.getItem("isAdmin")
+
+    const handleDeleteProduct = async () => {
+        try {
+            await deleteProduct(product.props.id)
+            enqueueSnackbar("Produto deletado com sucesso", { variant: "success" })
+            fetchProducts()
+            setDialogOpen(false)
+        } catch (err) {
+            enqueueSnackbar("Erro ao deletar produto", { variant: "error" })
+        }
+    }
+
 
     return (
         <Card sx={{
@@ -29,19 +45,29 @@ export default function CardProduct({ product }: Props) {
             textAlign: "center",
             position: 'relative',
         }}>
-            <Box sx={{ position: 'absolute', top: 0, right: 0 }}>
-                <FormDialog
-                    open={open}
-                    productId={product.props.id}
-                    Icon={<IconDotsVertical />}
-                    onClick={() => setDialogOpen(true)}
-                    onClose={() => setDialogOpen(false)}
-                />
+            <Box sx={{ display: "flex", position: 'absolute', top: 0, right: 0 }}>
+                {
+                    Boolean(isAdmin) && (
+                        <>
+                            <FormDialog
+                                fetchProducts={fetchProducts}
+                                open={open}
+                                productId={product.props.id}
+                                Icon={<IconEdit />}
+                                onClick={() => setDialogOpen(true)}
+                                onClose={() => setDialogOpen(false)}
+                            />
+                            <IconButton>
+                                <IconTrash onClick={handleDeleteProduct} />
+                            </IconButton>
+                        </>
+                    )
+                }
             </Box>
             <CardMedia
                 component="img"
-                width={150}
-                height={150}
+                width={160}
+                height={160}
                 image={concatImgUrl(product.props.image)}
                 alt={product.props.name}
             />

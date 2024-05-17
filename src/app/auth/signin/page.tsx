@@ -4,6 +4,7 @@ import { Input } from "@/components/input";
 import { signinSchema } from "@/schema/signin-user-schema";
 import axiosInstance from "@/service/config-axios";
 import { endpoints } from "@/service/endpoints";
+import { jwtDecode } from "@/utils/jwt";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoadingButton } from "@mui/lab";
 import { Box, Link, Typography } from "@mui/material";
@@ -36,8 +37,10 @@ export default function SigninPage() {
                 password: data.password,
             })
 
-            router.push("/auth/dashboard/home")
             Cookies.set("Auth", response.data.accessToken)
+            const jwt = jwtDecode(response.data.accessToken)
+            window.localStorage.setItem("isAdmin", JSON.stringify(jwt?.isAdmin!))
+            router.push("/dashboard/home")
             enqueueSnackbar("Login realizado com sucesso", { variant: "success" })
             reset()
         } catch (err) {

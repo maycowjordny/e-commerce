@@ -7,10 +7,10 @@ export const endpoints = {
     },
     product: {
         create: "/products/add",
-        list: "/products",
+        list: `/products`,
         getById: (id?: string) => `/products/${id}`,
         update: (id: string) => `/products/${id}`,
-        delete: "/products/",
+        delete: (id: string) => `/products/${id}`,
     },
 
 }
