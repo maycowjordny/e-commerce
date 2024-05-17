@@ -6,17 +6,16 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import { IconDotsVertical } from '@tabler/icons-react';
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import FormDialog from './form-dialog';
 
 type Props = {
-    product: Product
-    setOpen: Dispatch<SetStateAction<boolean>>
-    open: boolean
-}
+    product: Product;
+    setOpen: Dispatch<SetStateAction<boolean>>;
+};
 
-export default function CardProduct({ product, setOpen, open }: Props) {
-
+export default function CardProduct({ product }: Props) {
+    const [open, setDialogOpen] = useState(false);
 
     return (
         <Card sx={{
@@ -30,26 +29,21 @@ export default function CardProduct({ product, setOpen, open }: Props) {
             textAlign: "center",
             position: 'relative',
         }}>
-            <Box
-                sx={{
-                    position: 'absolute',
-                    top: 0,
-                    right: 0,
-                }}>
+            <Box sx={{ position: 'absolute', top: 0, right: 0 }}>
                 <FormDialog
                     open={open}
                     productId={product.props.id}
                     Icon={<IconDotsVertical />}
-                    onClick={() => setOpen(true)}
-                    onClose={() => setOpen(false)}
+                    onClick={() => setDialogOpen(true)}
+                    onClose={() => setDialogOpen(false)}
                 />
             </Box>
             <CardMedia
                 component="img"
                 width={150}
                 height={150}
-                image={concatImgUrl(product?.props.image)}
-                alt={concatImgUrl(product?.props.name)}
+                image={concatImgUrl(product.props.image)}
+                alt={product.props.name}
             />
             <CardContent>
                 <Box>
@@ -72,7 +66,5 @@ export default function CardProduct({ product, setOpen, open }: Props) {
                 Comprar
             </LoadingButton>
         </Card>
-
     );
-};
-
+}

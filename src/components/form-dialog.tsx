@@ -1,13 +1,10 @@
 import { Product } from '@/interfaces/product';
 import { registerProductSchema } from '@/schema/register-product';
-import axiosInstance from '@/service/config-axios';
-import { endpoints } from '@/service/endpoints';
+import { createProduct, getProductById, updateProduct } from '@/service/product-service';
 import { concatImgUrl } from '@/utils/concat-img';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LoadingButton } from '@mui/lab';
 import { Button, ButtonProps, Dialog, DialogActions, DialogContent, DialogProps, DialogTitle, IconButton, ModalProps } from '@mui/material';
-import Cookies from 'js-cookie';
-import { useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -17,31 +14,28 @@ import { Input } from './input';
 import InputCurrency from './input-currency';
 import ImageUpload from './input-file';
 
-type RegisterProductValidationSchema = z.infer<typeof registerProductSchema>;
+export type RegisterProductValidationSchema = z.infer<typeof registerProductSchema>;
 
 type FormDialogProps = {
     productId?: string;
     Icon: React.ReactNode;
     label?: string;
     open: ModalProps['open'];
+    fetchProducts?: () => Promise<void>
     onClose: ModalProps['onClose'];
     onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
-    product?: Product | null
 } & DialogProps
 
-export default function FormDialog({ productId, Icon, label, onClose, onClick, open }: FormDialogProps) {
+export default function FormDialog({ productId, Icon, label, onClose, onClick, open, fetchProducts }: FormDialogProps) {
     const [product, setProduct] = useState<Product>({} as Product);
 
-
     const formValue = useMemo(() => ({
-        name: product?.props?.name,
-        price: product?.props?.price,
-        image: concatImgUrl(product?.props?.image),
-    }), [product])
+        name: product?.props?.name || '',
+        price: product?.props?.price || 0,
+        image: product?.props?.image ? concatImgUrl(product.props.image) : '',
+    }), [product]);
 
-    const ref = useRef()
-    const router = useRouter()
-    const token = Cookies.get('Auth');
+    const ref = useRef();
 
     const defaultValues = {
         name: "",
@@ -55,57 +49,23 @@ export default function FormDialog({ productId, Icon, label, onClose, onClick, o
         values: formValue
     });
 
-    const { handleSubmit, formState: { isSubmitting, isDirty }, reset, setValue, } = methods;
+    const { handleSubmit, formState: { isSubmitting, isDirty }, reset, setValue } = methods;
 
     const onSubmit = handleSubmit(async (data: RegisterProductValidationSchema) => {
         try {
             if (productId) {
-                await axiosInstance.put(endpoints.product.update(productId), {
-                    name: data.name,
-                    price: data.price,
-                    image: data.image === concatImgUrl(product?.props.image) ? undefined : data.image
-                }, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                })
-
+                await updateProduct(productId, data);
             } else {
-                await axiosInstance.post(endpoints.product.create, {
-                    name: data.name,
-                    price: data.price,
-                    image: data.image
-                }, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+                await createProduct(data);
             }
-            enqueueSnackbar("Produto cadastrado com sucesso", { variant: "success" })
-            reset();
+            enqueueSnackbar("Produto cadastrado com sucesso", { variant: "success" });
 
+            if (fetchProducts) fetchProducts();
+            reset();
         } catch (error) {
-            enqueueSnackbar("Erro ao cadastrar produto", { variant: "error" })
+            enqueueSnackbar("Erro ao cadastrar produto", { variant: "error" });
         }
     });
-
-
-
-    useEffect(() => {
-        async function fetchProduct() {
-            try {
-                const response = await axiosInstance.get(endpoints.product.getById(productId), {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-                setProduct(response.data);
-            } catch (error) {
-                console.error('Error fetching product:', error);
-            }
-        }
-        fetchProduct()
-    }, [token, productId])
 
     const handleDrop = async (file: File | undefined) => {
         if (!file) return;
@@ -120,29 +80,38 @@ export default function FormDialog({ productId, Icon, label, onClose, onClick, o
         reader.readAsDataURL(file);
     }
 
+    useEffect(() => {
+
+        async function fetchProduct() {
+            try {
+                if (!productId) return;
+                const response = await getProductById(productId);
+                setProduct(response);
+                reset(response.props);
+            } catch (error) {
+                console.error('Error fetching product:', error);
+            }
+        }
+        fetchProduct();
+    }, [productId, reset]);
 
     return (
         <FormProvider methods={methods} onSubmit={onSubmit}>
             <>
-                {
-                    productId ?
-                        (
-
-                            <IconButton onClick={onClick}>
-                                {Icon}
-                            </IconButton>
-                        )
-                        :
-                        (
-                            <Button
-                                variant="contained"
-                                onClick={onClick}
-                                sx={{ padding: "0px 12px", height: "38px", marginBottom: "20px" }}
-                                startIcon={Icon}
-                            >
-                                {label}
-                            </Button>
-                        )}
+                {productId ? (
+                    <IconButton onClick={onClick}>
+                        {Icon}
+                    </IconButton>
+                ) : (
+                    <Button
+                        variant="contained"
+                        onClick={onClick}
+                        sx={{ padding: "0px 12px", height: "38px", marginBottom: "20px" }}
+                        startIcon={Icon}
+                    >
+                        {label}
+                    </Button>
+                )}
                 <Dialog
                     open={open}
                     onClose={onClose}

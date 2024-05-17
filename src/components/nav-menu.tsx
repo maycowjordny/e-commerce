@@ -1,3 +1,4 @@
+import { FilterContext } from '@/Context/filter-context';
 import { InputBase, useMediaQuery, useTheme } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -6,7 +7,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { alpha, styled } from '@mui/material/styles';
 import { IconLogout, IconSearch } from '@tabler/icons-react';
-import { ReactNode } from 'react';
+import { ReactNode, useContext } from 'react';
 
 const Search = styled('div')(({ theme }) => ({
     position: 'relative',
@@ -51,6 +52,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 export default function NavBar({ children }: { children: ReactNode }) {
     const theme = useTheme()
+    const { setFilter } = useContext(FilterContext)
     const smUp = useMediaQuery(theme.breakpoints.up("md"));
     return (
         <>
@@ -68,6 +70,7 @@ export default function NavBar({ children }: { children: ReactNode }) {
                                             <IconSearch />
                                         </SearchIconWrapper>
                                         <StyledInputBase
+                                            onChange={(e) => setFilter(e.target.value)}
                                             placeholder="O que você procura?"
                                             inputProps={{ 'aria-label': 'search' }}
                                         />

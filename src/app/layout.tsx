@@ -1,3 +1,4 @@
+import { ContextProvider } from "@/Context/filter-context";
 import SnackbarProvider from "@/components/notistack";
 import EcommerceThemeProvider from "@/theme/theme-provider";
 import type { Metadata } from "next";
@@ -15,11 +16,13 @@ export default function RootLayout({
   return (
     <html lang="pt-br">
       <body>
-        <SnackbarProvider>
-          <EcommerceThemeProvider>
-            {children}
-          </EcommerceThemeProvider>
-        </SnackbarProvider>
+        <ContextProvider>
+          <SnackbarProvider>
+            <EcommerceThemeProvider>
+              {children}
+            </EcommerceThemeProvider>
+          </SnackbarProvider>
+        </ContextProvider>
       </body>
     </html>
   );
